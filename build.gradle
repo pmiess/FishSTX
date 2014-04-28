@@ -15,7 +15,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
+    compile (
+    	['commons-collections:commons-collections:3.2'],
+    	['net.sf.joost:joost:0.9.1']
+    )
     testCompile(
 	    ['org.testng:testng:6.8.8'],
 	    ['org.uncommons:reportng:1.1.4']
