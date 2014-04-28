@@ -1,6 +1,7 @@
 .gradle
 build/
-/bin
+bin/
 .classpath
 .project
 .settings
+test-output/
