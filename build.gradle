@@ -1,0 +1,49 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+version = '1.0'
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
+    testCompile(
+	    ['org.testng:testng:6.8.8'],
+	    ['org.uncommons:reportng:1.1.4']
+    )
+}
+
+test {
+  useTestNG() {
+    suiteXmlBuilder().suite(name: 'fishSTXUnitTests', parallel: 'tests') {
+      test (name : 'all-tests') {
+        packages {
+          'package' (name: 'com.github.pmiess.fishSTX')
+        }
+      }
+    }
+  }
+  options {
+    listeners << 'org.uncommons.reportng.HTMLReporter'
+    listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+  }
+  ext.useDefaultListeners = true
+  ext.workingDirectory = 'build/'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
