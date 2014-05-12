@@ -31,7 +31,7 @@ public FishSTX(String[] args) throws TransformerException{
 	}
 	
 	
-// use Joost as transformation engine
+	// use Joost as transformation engine
 	String key = "javax.xml.transform.TransformerFactory";
 	String valueJOOST = "net.sf.joost.trax.TransformerFactoryImpl";
 	Properties props = System.getProperties();
@@ -39,6 +39,9 @@ public FishSTX(String[] args) throws TransformerException{
 	System.setProperties(props);
 	
 	TransformerFactory factory =  net.sf.joost.trax.TransformerFactoryImpl.newInstance();
+	
+	//use XSLTC to execute XSL transforms
+	factory.setAttribute("net.sf.joost.trax.TrAXConstants.KEY_XSLT_FACTORY", "org.apache.xalan.xsltc.trax.TransformerFactoryImpl");
 	
 	Transformer transformer =
 	factory.newTransformer(new StreamSource(args[1]));
