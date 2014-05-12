@@ -41,7 +41,7 @@ public FishSTX(String[] args) throws TransformerException{
 	TransformerFactory factory =  net.sf.joost.trax.TransformerFactoryImpl.newInstance();
 	
 	//use XSLTC to execute XSL transforms
-	factory.setAttribute("net.sf.joost.trax.TrAXConstants.KEY_XSLT_FACTORY", "org.apache.xalan.xsltc.trax.TransformerFactoryImpl");
+	factory.setAttribute(net.sf.joost.trax.TrAXConstants.KEY_XSLT_FACTORY, "org.apache.xalan.xsltc.trax.TransformerFactoryImpl");
 	
 	Transformer transformer =
 	factory.newTransformer(new StreamSource(args[1]));
