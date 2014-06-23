@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: stx-stylesheet-definition.xsd,v 1.11 2004/07/01 10:17:09 pcimprich Exp $ -->
+<xs:schema targetNamespace="http://stx.sourceforge.net/2002/ns"
+           xmlns:stx="http://stx.sourceforge.net/2002/ns"
+           xmlns="http://stx.sourceforge.net/2002/ns"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+  <xs:group name="root-content">
+    <xs:choice>
+      <xs:element ref="transform"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="group-content">
+    <xs:choice>
+      <xs:element ref="variable"/>
+      <xs:element ref="param"/>
+      <xs:element ref="buffer"/>
+      <xs:element ref="template"/>
+      <xs:element ref="procedure"/>
+      <xs:element ref="include"/>
+      <xs:element ref="group"/>
+      <xs:element ref="assign"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="top-level-content">
+    <xs:choice>
+      <xs:group ref="group-content"/>
+      <xs:element ref="namespace-alias"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="call-procedure-content">
+    <xs:choice>
+      <xs:element ref="with-param"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="processXXX-content">
+    <xs:choice>
+      <xs:element ref="with-param"/>
+    </xs:choice>
+  </xs:group>
+  <xs:group name="text-template-content">
+    <xs:choice>
+      <xs:element ref="text"/>
+      <xs:element ref="cdata"/>
+      <xs:element ref="value-of"/>
+      <xs:element ref="if"/>
+      <xs:element ref="else"/>
+      <xs:element ref="choose"/>
+      <!-- plus _text ??? -->
+    </xs:choice>
+  </xs:group>
+  <xs:group name="template-content">
+    <xs:choice>
+      <xs:any namespace="##other" processContents="lax"/>
+      <xs:element ref="call-procedure"/>
+      <xs:element ref="copy"/>
+      <xs:element ref="element"/>
+      <xs:element ref="start-element"/>
+      <xs:element ref="end-element"/>
+      <xs:element ref="attribute"/>
+      <xs:element ref="comment"/>
+      <xs:element ref="processing-instruction"/>
+      <xs:element ref="doctype"/>
+      <xs:element ref="variable"/>
+      <xs:element ref="param"/>
+      <xs:element ref="assign"/>
+      <xs:element ref="buffer"/>
+      <xs:element ref="result-buffer"/>
+      <xs:element ref="result-document"/>
+      <xs:element ref="for-each-item"/>
+      <xs:element ref="while"/>
+      <xs:element ref="message"/>
+      <xs:element ref="process-attributes"/>
+      <xs:element ref="process-buffer"/>
+      <xs:element ref="process-children"/>
+      <xs:element ref="process-document"/>
+      <xs:element ref="process-self"/>
+      <xs:element ref="process-siblings"/>
+      <xs:element ref="analyze-text"/>
+      <xs:group ref="text-template-content"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:element name="transform">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="top-level-content"/>
+      </xs:choice>
+      <xs:attribute name="version" type="xs:decimal" use="required"/>
+      <xs:attribute name="pass-through" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none"/>
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="text"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="recognize-cdata" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none"/>
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="text"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="strip-space" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="stxpath-default-namespace" type="xs:anyURI" use="optional"/>
+      <xs:attribute name="output-encoding" type="xs:string" use="optional"/>
+      <xs:attribute name="output-method" type="xs:QName" use="optional"/>
+      <xs:attribute name="exclude-result-prefixes" use="optional">
+        <xs:simpleType>
+          <xs:union>
+            <xs:simpleType>
+              <xs:list itemType="ns-prefix"/>
+            </xs:simpleType>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:enumeration value="#all"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:union>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+    <!-- constraints -->
+    <!-- primary keys incl. null -->
+    <xs:unique name="groupNamePK">
+      <xs:selector xpath=".//group"/>
+      <xs:field xpath="@name"/>
+    </xs:unique>
+    <xs:key name="procedureNamePK">
+      <xs:selector xpath=".//procedure"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <!-- foreign keys -->
+    <xs:keyref name="call-procedureNameFK" refer="groupNamePK">
+      <xs:selector xpath=".//call-procedure"/>
+      <xs:field xpath="@group"/>
+    </xs:keyref>
+    <xs:keyref name="call-procedureGroupFK" refer="procedureNamePK">
+      <xs:selector xpath=".//call-procedure"/>
+      <xs:field xpath="@name"/>
+    </xs:keyref>		
+    <xs:keyref name="process-xxxFK" refer="groupNamePK">
+      <xs:selector xpath=".//process-children | .//process-attributes | .//process-siblings | .//process-self | .//process-document | .//process-buffer"/>
+      <xs:field xpath="@group"/>
+    </xs:keyref>
+  </xs:element>
+  <xs:element name="group">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="group-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="optional"/>
+      <xs:attribute name="pass-through" use="optional" default="inherit">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none"/>
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="text"/>
+            <xs:enumeration value="inherit"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="recognize-cdata" use="optional" default="inherit">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="none"/>
+            <xs:enumeration value="all"/>
+            <xs:enumeration value="text"/>
+            <xs:enumeration value="inherit"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="strip-space" use="optional" default="inherit">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+            <xs:enumeration value="inherit"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="include">
+    <xs:complexType>
+      <xs:attribute name="href" type="xs:anyURI" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="namespace-alias">
+    <xs:complexType>
+      <xs:attribute name="stylesheet-prefix" type="ns-prefix" use="optional" default="#default"/>
+      <xs:attribute name="result-prefix" type="ns-prefix" use="optional" default="#default"/>
+    </xs:complexType>
+  </xs:element>
+  <!-- type for namespace aliasing -->
+  <xs:simpleType name="ns-prefix">
+    <xs:union memberTypes="xs:NCName">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="#default"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:element name="template">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="match" type="xs:string" use="required"/>
+      <xs:attribute name="priority" type="xs:decimal" use="optional"/>
+      <xs:attributeGroup ref="templatts"/>
+      <!-- todo: use regular expression for match pattern -->
+    </xs:complexType>
+  </xs:element>
+  <!-- definition of the attributes visibility, public and new-scope
+       for stx:template and stx:procedure elements -->
+  <xs:attributeGroup name="templatts">
+    <xs:attribute name="visibility" use="optional" default="local">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="local"/>
+          <xs:enumeration value="group"/>
+          <xs:enumeration value="global"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="public" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="yes"/>
+          <xs:enumeration value="no"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="new-scope" use="optional" default="no">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="yes"/>
+          <xs:enumeration value="no"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <!-- todo: default value of the public attribute for top-level
+         templates as "yes", for group templates it is "no" -->
+  </xs:attributeGroup>
+
+  <xs:element name="procedure">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attributeGroup ref="templatts"/>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="call-procedure">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="call-procedure-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="with-param">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="param">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+      <xs:attribute name="required" use="optional">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="copy">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="attributes" type="xs:string" use="optional"/>
+      <!-- todo: type of "attributes" should be of kind stx-pattern -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:attributeGroup name="filter-atts">
+    <xs:attribute name="filter-method" type="xs:string" use="optional" /> <!-- AVT -->
+    <xs:attribute name="filter-src" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="url\([ ]*'[^']+'[ ]*\)" />
+          <xs:pattern value="url\([ ]*&quot;[^&quot;]+&quot;[ ]*\)" />
+          <xs:pattern value="url\([ ]*[^&quot;']+[ ]*\)" />
+          <xs:pattern value="buffer\([ ]*.+[ ]*\)" />
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:attributeGroup>
+  
+  <xs:element name="process-children">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+      <xs:attributeGroup ref="filter-atts"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="process-attributes">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="process-siblings">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+      <xs:attribute name="while" type="xs:string" use="optional" default="node()"/>
+      <xs:attribute name="until" type="xs:string" use="optional" default="node()[false()]"/>
+      <!-- todo: type of "while" and "until" should be pattern -->
+      <xs:attributeGroup ref="filter-atts"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="process-self">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+      <xs:attributeGroup ref="filter-atts"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="analyze-text">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="match" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:group ref="template-content" />
+            </xs:choice>
+            <xs:attribute name="regex" type="xs:string" use="required"/>
+            <xs:attribute name="case" use="optional" default="sensitive">
+              <xs:simpleType>
+                <xs:restriction base="xs:NMTOKEN">
+                  <xs:enumeration value="sensitive"/>
+                  <xs:enumeration value="insensitive"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="no-match" minOccurs="0">
+          <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:group ref="template-content"/>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="select" type="xs:string" use="required"/>
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="value-of">
+    <xs:complexType>
+      <xs:attribute name="select" type="xs:string" use="required"/>
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="text">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="markup" use="optional" default="error">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="error"/>
+            <xs:enumeration value="ignore"/>
+            <xs:enumeration value="serialize"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <!-- todo : stx:text element has an implicit xml:space attribute with
+          the default value "preserve" -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="cdata">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <!-- todo : stx:cdata element has an implicit xml:space attribute with
+           the default value "preserve" -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="element">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="namespace" type="xs:string" use="optional"/>
+      <!-- todo: type definition for {qname} and {uri-reference} -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="start-element">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="namespace" type="xs:string" use="optional"/>
+      <!-- todo: type definition for {qname} and {uri-reference} -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="end-element">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="namespace" type="xs:string" use="optional"/>
+      <!-- todo: type definition for {qname} and {uri-reference} -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="attribute">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="namespace" type="xs:string" use="optional"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+      <!-- todo: type definition for {qname} and {uri-reference} -->
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="processing-instruction">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+      <!-- todo: type definition for {ncname} -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="comment">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="doctype">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="system-id" type="xs:string" use="optional"/>
+      <xs:attribute name="public-id" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="if">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="test" type="xs:string" use="required"/>
+      <!-- type : type of "test" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="else">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="choose">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="when" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:group ref="template-content"/>
+            </xs:choice>
+            <xs:attribute name="test" type="xs:string" use="required"/>
+            <!-- type : type of "test" should be stx-expression -->
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="otherwise" minOccurs="0">
+          <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:group ref="template-content"/>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="for-each-item">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="required"/>
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="while">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="test" type="xs:string" use="required"/>
+      <!-- type : type of "test" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="process-document">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="href" type="xs:string" use="required"/>
+      <!-- type : type of "href" should be stx-expression -->
+      <xs:attribute name="base" type="uri-reference" use="optional"/>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+      <xs:attributeGroup ref="filter-atts"/>
+    </xs:complexType>
+  </xs:element>
+  <!-- definition of uri-reference -->
+  <xs:simpleType name="uri-reference">
+    <xs:union memberTypes="xs:string">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="#input"/>
+          <xs:enumeration value="#stylesheet"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:element name="result-document">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="href" type="xs:string" use="required"/>
+      <xs:attribute name="output-encoding" type="xs:string" use="optional"/>
+      <xs:attribute name="output-method" type="xs:QName" use="optional"/>
+      <!-- type : type of "href" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="buffer">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="result-buffer">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="clear" use="optional" default="no">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="process-buffer">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="processXXX-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="group" type="xs:QName" use="optional"/>
+      <xs:attributeGroup ref="filter-atts"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="message">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="template-content"/>
+      </xs:choice>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="variable">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+      <xs:attribute name="keep-value" use="optional" default="no">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="yes"/>
+            <xs:enumeration value="no"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="assign">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:group ref="text-template-content"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:QName" use="required"/>
+      <xs:attribute name="select" type="xs:string" use="optional"/>
+      <!-- type : type of "select" should be stx-expression -->
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
